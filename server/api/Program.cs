@@ -26,6 +26,9 @@ app.UseCors(
     .SetIsOriginAllowed(x => true)
 );
 
+
+
+// it's wrong to put this code here 
 app.MapGet("/", (
     
     [FromServices]IOptionsMonitor<AppOptions> optionsMonitor,
@@ -42,5 +45,8 @@ app.MapGet("/", (
     var authors = dbContext.Authors.ToList();
     return authors;
 });
+
+// use this line to map the controllers in your application instead
+app.MapControllers();
 
 app.Run();
