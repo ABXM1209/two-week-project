@@ -1,22 +1,54 @@
+import {createBrowserRouter, RouterProvider} from "react-router";
+import Home from "./Components/Home.tsx";
+import {useEffect} from "react";
+import {libraryApi} from "./api-clients.ts";
+import {useAtom} from "jotai";
+import {AllAuthorsAtom, AllBooksAtom, AllGenresAtom} from "./atoms/atoms.ts";
+import Books from "./Components/Books.tsx";
+import Authors from "./Components/Authors.tsx";
+import Genres from "./Components/Genres.tsx";
 
-import './App.css'
-import {finalUrl} from "./BaseUrl.ts";
 
 function App() {
-    
 
-  return (
-    <>
-        <button onClick={()=>{
-            fetch(finalUrl)
-                .then(response =>{
-                    console.log(response)
-                }).catch(error =>{
-                    console.log(error)
-            })
-        }}>OI OVER HERE CLICK ME MATE</button>
-    </>
-  )
+    const [, setAuthors] = useAtom(AllAuthorsAtom)
+    const [, setBooks] = useAtom(AllBooksAtom)
+    const [, setGenres] = useAtom(AllGenresAtom)
+
+    useEffect(() => {
+        initializeData();
+    }, [])
+
+    async function initializeData() {
+        setAuthors(await libraryApi.getAllAuthors());
+        setBooks(await libraryApi.getAllBooks())
+        setGenres(await libraryApi.getAllGenres())
+    }
+
+    return (
+        <>
+            <RouterProvider router={createBrowserRouter([
+                {
+                    path: '',
+                    element: <Home/>,
+                    children: [
+                        {
+                            path: 'books',
+                            element: <Books/>
+                        },
+                        {
+                            path: 'authors',
+                            element: <Authors/>
+                        },
+                        {
+                            path: 'genres',
+                            element: <Genres/>
+                        }
+                    ]
+                }
+            ])}/>
+        </>
+    )
 }
 
 export default App
