@@ -11,5 +11,5 @@ dotnet ef dbcontext scaffold "$CONN_STR" Npgsql.EntityFrameworkCore.PostgreSQL \
     --no-onconfiguring \
     --namespace efscaffold.Entities \
     --context-namespace Infrastructure.Postgres.Scaffolding \
-    --schema libray \
+    --schema library \
     --force

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using api.Dtos;
+using api.Dtos.Requests;
 using api.Services;
 using efscaffold.Entities;
 using Microsoft.AspNetCore.Mvc;
@@ -11,49 +12,79 @@ public class LibraryController(ILibraryService libraryService) : ControllerBase
 {
     [Route(nameof(GetAllAuthors))]
     [HttpGet]
-    public async Task<ActionResult<List<Author>>> GetAllAuthors()
+    public async Task<List<AuthorDto>> GetAllAuthors()
     {
-        var authors = await libraryService.GetAllAuthors();
-        return authors;
+        return await libraryService.GetAllAuthors();
+    }   
+    
+    [Route(nameof(GetAllBooks))]
+    [HttpGet]
+    public async Task<List<BookDto>> GetAllBooks()
+    {
+        return await libraryService.GetAllBooks();
+    }  
+    
+    [Route(nameof(GetAllGenres))]
+    [HttpGet]
+    public async Task<List<GenreDto>> GetAllGenres()
+    {
+        return await libraryService.GetAllGenres();
     }
 
     [Route(nameof(CreateAuthor))]
     [HttpPost]
-    public async Task<ActionResult<Author>> CreateAuthor([FromBody]CreateAuthorDto createAuthorDto)
+    public async Task<AuthorDto> CreateAuthor([FromBody]CreateAuthorRequestDto dto)
     {
-        var result = await libraryService.CreateAuthor(createAuthorDto);
-        return result;
+        return await libraryService.CreateAuthor(dto);
     }
     
-    [Route(nameof(GetAllBooks))]
-    [HttpGet]
-    public async Task<ActionResult<List<Book>>> GetAllBooks()
+    [HttpPost(nameof(CreateBook))]
+    public async Task<BookDto> CreateBook([FromBody]CreateBookRequestDto dto)
     {
-        var books = await libraryService.GetAllBooks();
-        return books;
-    }
-
-    [Route(nameof(CreateBook))]
-    [HttpPost]
-    public async Task<ActionResult<Book>> CreateBook([FromBody]CreateBookDto createBookDto)
-    {
-        var result = await libraryService.CreateBook(createBookDto);
-        return result;
+        return await libraryService.CreateBook(dto);
     }
     
-    [Route(nameof(GetAllGenres))]
-    [HttpGet]
-    public async Task<ActionResult<List<Genre>>> GetAllGenres()
-    {
-        var genres = await libraryService.GetAllGenres();
-        return genres;
-    }
-
     [Route(nameof(CreateGenre))]
     [HttpPost]
-    public async Task<ActionResult<Genre>> CreateGenre([FromBody]CreateGenreDto createGenreDto)
+    public async Task<GenreDto> CreateGenre([FromBody]CreateGenreRequestDto dto)
     {
-        var result = await libraryService.CreateGenre(createGenreDto);
+        var result = await libraryService.CreateGenre(dto);
         return result;
+    }
+
+    [HttpPut(nameof(UpdateAuthor))]
+    public async Task<AuthorDto> UpdateAuthor([FromBody] UpdateAuthorRequestDto dto)
+    {
+        return await libraryService.UpdateAuthor(dto);
+    }
+    
+    [HttpPut(nameof(UpdateBook))]
+    public async Task<BookDto> UpdateBook([FromBody]UpdateBookRequestDto dto)
+    {
+        return await libraryService.UpdateBook(dto);
+    }
+
+    [HttpPut(nameof(UpdateGenre))]
+    public async Task<GenreDto> UpdateGenre([FromBody] UpdateGenreRequestDto dto)
+    {
+        return await libraryService.UpdateGenre(dto);
+    }
+
+    [HttpDelete(nameof(DeleteAuthor))]
+    public async Task<AuthorDto> DeleteAuthor([FromQuery] string authorId)
+    {
+        return await libraryService.DeleteAuthor(authorId);
+    }
+    
+    [HttpDelete(nameof(DeleteBook))]
+    public async Task<BookDto> DeleteBook([FromQuery] string bookId)
+    {
+        return await libraryService.DeleteBook(bookId);
+    }
+
+    [HttpDelete(nameof(DeleteGenre))]
+    public async Task<GenreDto> DeleteGenre([FromQuery] string genreId)
+    {
+        return await libraryService.DeleteGenre(genreId);
     }
 }

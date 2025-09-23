@@ -32,27 +32,9 @@ app.UseCors(
         .SetIsOriginAllowed(x => true)
 );
 
-
-
-// it's wrong to put this code here 
-app.MapGet("/", (
-    
-    [FromServices]IOptionsMonitor<AppOptions> optionsMonitor,
-    [FromServices]MyDbContext dbContext) =>
-{
-    var myAuthor = new Author()
-    {
-        Id = Guid.NewGuid().ToString(),
-        Name = "Charles Dickens",
-        Createdat = DateTime.UtcNow
-    };
-    dbContext.Authors.Add(myAuthor);
-    dbContext.SaveChanges();
-    var authors = dbContext.Authors.ToList();
-    return authors;
-});
-
-// use this line to map the controllers in your application instead
 app.MapControllers();
 
+app.UseOpenApi();
+app.UseSwaggerUi();
+await app.GenerateApiClientsFromOpenApi("/../../client/src/generated-ts-client.ts");
 app.Run();

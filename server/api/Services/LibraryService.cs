@@ -1,67 +1,127 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using api.Controllers;
 using api.Dtos;
+using api.Dtos.Requests;
 using efscaffold;
 using efscaffold.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace api.Services;
 
-public class LibraryService(MyDbContext dbContext) : ILibraryService
+public class LibraryService(MyDbContext ctx) : ILibraryService
 {
-    public async Task<List<Author>> GetAllAuthors()
+    public Task<List<AuthorDto>> GetAllAuthors()
     {
-        return dbContext.Authors.ToList();
-    }
-
-    public async Task<List<Book>> GetAllBooks()
-    {
-        return dbContext.Books.ToList();
-    }
-
-    public async Task<List<Genre>> GetAllGenres()
-    {
-        return dbContext.Genres.ToList();
+        return ctx.Authors.Select(a => new AuthorDto(a)).ToListAsync();
     }
     
-    public async Task<Author> CreateAuthor(CreateAuthorDto createAuthorDto)
+    public Task<List<BookDto>> GetAllBooks()
     {
-        var myAuthor = new Author()
-        {
-            Id = Guid.NewGuid().ToString(),
-            Name = createAuthorDto.Name,
-            Createdat = DateTime.UtcNow
-        };
-        dbContext.Authors.Add(myAuthor);
-        dbContext.SaveChanges(); 
-        return myAuthor;
+        return ctx.Books.Select(b => new BookDto(b)).ToListAsync();
     }
 
-    public async Task<Book> CreateBook(CreateBookDto createBookDto)
+    public Task<List<GenreDto>> GetAllGenres()
     {
-        if (createBookDto.Pages < 24)
-            throw new ValidationException("Invalid page number, Must be at least 24");
-        var myBook = new Book()
-        {
-            Id = Guid.NewGuid().ToString(),
-            Title = createBookDto.Title,
-            Pages = createBookDto.Pages,
-            Createdat = createBookDto.CreatedAt
-        };
-        dbContext.Books.Add(myBook);
-        dbContext.SaveChanges();
-        return myBook;
+        return ctx.Genres.Select(g => new GenreDto(g)).ToListAsync();
     }
-
-    public async Task<Genre> CreateGenre(CreateGenreDto createGenreDto)
+    
+    public async Task<AuthorDto> CreateAuthor(CreateAuthorRequestDto dto)
     {
-        var myGenre = new Genre()
+        Validator.ValidateObject(dto, new ValidationContext(dto));
+        
+        var author = new Author()
         {
             Id = Guid.NewGuid().ToString(),
-            Name = createGenreDto.Name,
+            Name = dto.Name,
             Createdat = DateTime.UtcNow
         };
-        dbContext.Genres.Add(myGenre);
-        dbContext.SaveChanges();
-        return myGenre;
+        ctx.Authors.Add(author);
+        await ctx.SaveChangesAsync(); 
+        return new AuthorDto(author);
     }
+
+    public async Task<AuthorDto> UpdateAuthor(UpdateAuthorRequestDto dto)
+    {
+        Validator.ValidateObject(dto, new ValidationContext(dto));
+        var author = ctx.Authors.First(a => a.Id == dto.AuthorId);
+        author.Name = dto.Name;
+        author.Books = dto.BooksIds.Select(id => ctx.Books.First(b => b.Id == id)).ToList();
+        await ctx.SaveChangesAsync();
+        return new AuthorDto(author);
+    }
+
+    public async Task<AuthorDto> DeleteAuthor(string authorId)
+    {
+        var author = ctx.Authors.First(a => a.Id == authorId);
+        ctx.Authors.Remove(author);
+        await ctx.SaveChangesAsync();
+        return new AuthorDto(author);
+    }
+
+    public async Task<BookDto> CreateBook(CreateBookRequestDto dto)
+    {
+        Validator.ValidateObject(dto, new ValidationContext(dto), true);
+        
+        var book = new Book()
+        {
+            Id = Guid.NewGuid().ToString(),
+            Title = dto.Title,
+            Pages = dto.Pages,
+            Createdat = DateTime.UtcNow
+        };
+        ctx.Books.Add(book);
+        await ctx.SaveChangesAsync();
+        return new BookDto(book);
+    }
+
+    public async Task<BookDto> UpdateBook(UpdateBookRequestDto dto)
+    {
+        Validator.ValidateObject(dto, new ValidationContext(dto));
+        var book = ctx.Books.First(b=> b.Id == dto.BookId);
+        var genre = ctx.Genres.First(g => g.Id == dto.GenreId);
+        book.Genre = genre;
+        book.Title = dto.Title;
+        book.Pages = dto.Pages;
+        book.Authors = dto.AuthorsIds.Select(id =>  ctx.Authors.First(a => a.Id == id)).ToList();
+        ctx.Books.Update(book);
+        await ctx.SaveChangesAsync();
+        return new BookDto(book);
+    }
+
+    public async Task<BookDto> DeleteBook(string bookId)
+    {
+        var book = ctx.Books.First(b => b.Id == bookId);
+        ctx.Books.Remove(book);
+        await ctx.SaveChangesAsync();
+        return new BookDto(book);
+    }
+
+    public async Task<GenreDto> CreateGenre(CreateGenreRequestDto dto)
+    {
+        var genre = new Genre()
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = dto.Name,
+            Createdat = DateTime.UtcNow
+        };
+        ctx.Genres.Add(genre);
+        await ctx.SaveChangesAsync();
+        return new  GenreDto(genre);
+    }
+
+    public async Task<GenreDto> UpdateGenre(UpdateGenreRequestDto dto)
+    {
+        Validator.ValidateObject(dto, new ValidationContext(dto));
+        var genre = ctx.Genres.First(g => g.Id == dto.GenreId);
+        genre.Name = dto.Name;
+        genre.Books = dto.BooksIds.Select(id => ctx.Books.First(b => b.Id == id)).ToList();
+        await ctx.SaveChangesAsync();
+        return new GenreDto(genre);
+    }
+
+    public async Task<GenreDto> DeleteGenre(string genreId)
+    {
+        var genre = ctx.Genres.First(g => g.Id == genreId);
+        ctx.Genres.Remove(genre);
+        await ctx.SaveChangesAsync();
+        return new GenreDto(genre);    }
 }
