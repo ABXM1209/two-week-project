@@ -30,9 +30,9 @@ export function BookForm({ initial, onSave, onCancel }: BookFormProps) {
                 title,
                 pages,
                 genreId: genreId || "00000000-0000-0000-0000-000000000000",
-                //authorsIds: authorsIds.length > 0 ? authorsIds : []
-                authorsIds: authorsIds ?? []
+                authorsIds: authorsIds.length > 0 ? authorsIds : []
             });
+
         } else {
             await libraryApi.createBook({
                 title,
