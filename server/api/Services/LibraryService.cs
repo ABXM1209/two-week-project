@@ -11,12 +11,12 @@ public class LibraryService(MyDbContext ctx) : ILibraryService
 {
     public Task<List<AuthorDto>> GetAllAuthors()
     {
-        return ctx.Authors.Select(a => new AuthorDto(a)).ToListAsync();
+        return ctx.Authors.Include(a => a.Books).Select(a => new AuthorDto(a)).ToListAsync();
     }
     
     public Task<List<BookDto>> GetAllBooks()
     {
-        return ctx.Books.Select(b => new BookDto(b)).ToListAsync();
+        return ctx.Books.Include(a => a.Authors).Select(b => new BookDto(b)).ToListAsync();
     }
 
     public Task<List<GenreDto>> GetAllGenres()
@@ -76,12 +76,19 @@ public class LibraryService(MyDbContext ctx) : ILibraryService
     public async Task<BookDto> UpdateBook(UpdateBookRequestDto dto)
     {
         Validator.ValidateObject(dto, new ValidationContext(dto));
-        var book = ctx.Books.First(b=> b.Id == dto.BookId);
-        var genre = ctx.Genres.First(g => g.Id == dto.GenreId);
+        var book = ctx.Books.Include(b => b.Authors).Include(b => b.Genre).First(b=> b.Id == dto.BookId);
+        
+        var genre = ctx.Genres.FirstOrDefault(g => g.Id == dto.GenreId);
+        var authors = dto.AuthorsIds.Select(id =>  ctx.Authors.First(a => a.Id == id)).ToList();
+        
         book.Genre = genre;
         book.Title = dto.Title;
         book.Pages = dto.Pages;
-        book.Authors = dto.AuthorsIds.Select(id =>  ctx.Authors.First(a => a.Id == id)).ToList();
+        book.Authors.Clear();
+        authors.ForEach(a =>
+        {
+            book.Authors.Add(a);
+        });
         ctx.Books.Update(book);
         await ctx.SaveChangesAsync();
         return new BookDto(book);
